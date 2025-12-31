@@ -2,7 +2,7 @@ import { useState, useMemo, useEffect } from 'react';
 import { AlertTriangle, Lock, Calculator, FileText, AlertOctagon, Info, Loader2 } from 'lucide-react';
 import { clsx } from 'clsx';
 import { twMerge } from 'tailwind-merge';
-import { supabase } from '../lib/supabase'; // Importando a conexão real
+import { supabase } from '../lib/supabase';
 import { PDFDownloadLink } from '@react-pdf/renderer';
 import { BidReportPDF } from './BidReportPDF';
 
@@ -17,14 +17,16 @@ const formatCurrency = (value: number) => {
   }).format(value);
 };
 
+// --- TIPAGEM PARA CORREÇÃO DO BUILD ---
+// Define quais campos são objetos complexos {system, user}
+type EditableCostKey = 'dieselPrice' | 'operatorSalary' | 'machineValue';
+
 export const BidCalculator = () => {
   // --- ESTADO (State) ---
 
-  // 0. Controle de Dados (Loading & Seleção)
   const [isLoading, setIsLoading] = useState(true);
   const [selectedState, setSelectedState] = useState('SP');
   
-  // 1. Contexto & Edital
   const [scope, setScope] = useState({
     contractMonths: 12,
     monthlyHours: 200,
@@ -33,28 +35,25 @@ export const BidCalculator = () => {
     hasFuel: true,
   });
 
-  // 2. Risco Operacional
   const [riskLevel, setRiskLevel] = useState<'LOW' | 'MEDIUM' | 'HIGH'>('MEDIUM');
 
-  // 3. Custos (Agora começam zerados e são preenchidos pelo Supabase)
   const [costs, setCosts] = useState({
     dieselPrice: { system: 0, user: 0 },
     operatorSalary: { system: 0, user: 0 },
-    machineValue: { system: 350000, user: 350000 }, // FIPE Default
-    socialCharges: 0.85, // Default seguro
-    consumption: 9.0,    // Default seguro
-    maintenanceRate: 0.06 // Default seguro
+    machineValue: { system: 350000, user: 350000 },
+    socialCharges: 0.85, // Número simples (não editável diretamente no grid)
+    consumption: 9.0,    // Número simples
+    maintenanceRate: 0.06 // Número simples
   });
 
   const [editedFields, setEditedFields] = useState<string[]>([]);
 
-  // --- INTEGRAÇÃO COM SUPABASE (O Fio que Liga os Pontos) ---
+  // --- INTEGRAÇÃO ---
 
   useEffect(() => {
     async function fetchData() {
       setIsLoading(true);
       try {
-        // 1. Busca Parâmetros do Estado (Diesel e Salário)
         const { data: costParams, error: costError } = await supabase
           .from('cost_parameters')
           .select('*')
@@ -63,7 +62,6 @@ export const BidCalculator = () => {
 
         if (costError) throw costError;
 
-        // 2. Busca Specs da Máquina (Consumo e Manutenção)
         const { data: machineSpecs, error: specError } = await supabase
           .from('machine_specs')
           .select('*')
@@ -72,7 +70,6 @@ export const BidCalculator = () => {
 
         if (specError) throw specError;
 
-        // 3. Atualiza a tela com os dados reais
         setCosts(prev => ({
           ...prev,
           dieselPrice: { 
@@ -88,7 +85,6 @@ export const BidCalculator = () => {
           maintenanceRate: machineSpecs.maintenance_rate_percent / 100
         }));
 
-        // Limpa edições anteriores ao mudar de estado
         setEditedFields([]);
 
       } catch (error) {
@@ -100,12 +96,12 @@ export const BidCalculator = () => {
     }
 
     fetchData();
-  }, [selectedState]); // Roda sempre que mudar o Estado (SP->MG)
+  }, [selectedState]);
 
-
-  // --- LÓGICA DE AUDITORIA ---
+  // --- LÓGICA DE AUDITORIA (CORRIGIDA) ---
   
-  const handleCostChange = (field: keyof typeof costs, newValue: string) => {
+  // Agora aceita APENAS as chaves que são objetos editáveis
+  const handleCostChange = (field: EditableCostKey, newValue: string) => {
     const numericValue = parseFloat(newValue.replace(/[^0-9.]/g, '')) || 0;
     
     setCosts(prev => ({
@@ -118,10 +114,10 @@ export const BidCalculator = () => {
     }
   };
 
-  // --- MOTOR DE CÁLCULO (TCO ENGINE) ---
+  // --- MOTOR DE CÁLCULO ---
   
   const calculation = useMemo(() => {
-    if (isLoading) return null; // Não calcula se estiver carregando
+    if (isLoading) return null;
 
     let maintMult = 1.0;
     let fuelMult = 1.0;
@@ -180,7 +176,6 @@ export const BidCalculator = () => {
           <p className="text-sm text-slate-500 mt-1">Análise de Viabilidade Econômico-Operacional</p>
         </div>
         <div className="mt-4 md:mt-0 flex flex-col items-end">
-          {/* SELETOR DE ESTADO CONECTADO */}
           <select 
             value={selectedState}
             onChange={(e) => setSelectedState(e.target.value)}
@@ -198,7 +193,7 @@ export const BidCalculator = () => {
         </div>
       </header>
 
-      {/* LOADING STATE GERAL */}
+      {/* LOADING STATE */}
       {isLoading && (
         <div className="flex flex-col items-center justify-center h-64 space-y-4">
           <Loader2 className="w-10 h-10 text-blue-600 animate-spin" />
@@ -206,7 +201,7 @@ export const BidCalculator = () => {
         </div>
       )}
 
-      {/* CONTEÚDO PRINCIPAL (Só mostra quando carregar) */}
+      {/* CONTEÚDO PRINCIPAL */}
       {!isLoading && calculation && (
         <div className="grid grid-cols-1 md:grid-cols-12 gap-6 animate-in fade-in duration-500">
           
@@ -308,7 +303,7 @@ export const BidCalculator = () => {
               </div>
             </section>
 
-            {/* CARD 3: AUDITORIA (Conectado ao DB) */}
+            {/* CARD 3: AUDITORIA */}
             <section className="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
               <div className="flex justify-between items-center mb-4">
                 <h2 className="text-lg font-semibold flex items-center gap-2">
@@ -323,20 +318,22 @@ export const BidCalculator = () => {
 
               <div className="space-y-3">
                 {[
-                  { key: 'dieselPrice', label: 'Preço Diesel (L)', sys: costs.dieselPrice.system },
-                  { key: 'operatorSalary', label: 'Salário Base (Mês)', sys: costs.operatorSalary.system },
-                  { key: 'machineValue', label: 'Valor Máquina (FIPE)', sys: costs.machineValue.system },
+                  { key: 'dieselPrice', label: 'Preço Diesel (L)' },
+                  { key: 'operatorSalary', label: 'Salário Base (Mês)' },
+                  { key: 'machineValue', label: 'Valor Máquina (FIPE)' },
                 ].map((item) => {
-                  const isEdited = editedFields.includes(item.key);
-                  const currentValue = costs[item.key as keyof typeof costs].user;
+                  const key = item.key as EditableCostKey; // Type Casting Seguro
+                  const isEdited = editedFields.includes(key);
+                  const sysVal = costs[key].system;
+                  const userVal = costs[key].user;
 
                   return (
-                    <div key={item.key} className="grid grid-cols-12 gap-4 items-center">
+                    <div key={key} className="grid grid-cols-12 gap-4 items-center">
                       <div className="col-span-5 text-sm text-slate-600 font-medium">{item.label}</div>
                       
                       <div className="col-span-3 text-right pr-4 text-xs text-slate-400 border-r border-slate-100 relative group cursor-help">
-                        {isEdited && <span className="line-through">{formatCurrency(item.sys)}</span>}
-                        {!isEdited && <span>{formatCurrency(item.sys)}</span>}
+                        {isEdited && <span className="line-through">{formatCurrency(sysVal)}</span>}
+                        {!isEdited && <span>{formatCurrency(sysVal)}</span>}
                         <span className="hidden group-hover:block absolute bottom-full left-0 bg-slate-800 text-white p-1 text-[10px] rounded mb-1 whitespace-nowrap">
                           Valor vindo do Banco de Dados ({selectedState})
                         </span>
@@ -345,8 +342,8 @@ export const BidCalculator = () => {
                       <div className="col-span-4 relative">
                         <input
                           type="number"
-                          value={currentValue}
-                          onChange={(e) => handleCostChange(item.key as any, e.target.value)}
+                          value={userVal}
+                          onChange={(e) => handleCostChange(key, e.target.value)}
                           className={twMerge(
                             "w-full text-right py-1.5 px-3 rounded border text-sm focus:ring-2 transition-all font-mono",
                             isEdited 
@@ -431,15 +428,13 @@ export const BidCalculator = () => {
                 </div>
               </div>
 
-              {/* CTA INTELIGENTE: Botão vira Link de Download quando pronto */}
+              {/* CTA INTELIGENTE */}
               {calculation.status === 'DANGER' ? (
-                // Se for PERIGO, mantém botão desabilitado (Trava de Segurança)
                 <button disabled className="w-full py-4 rounded-xl font-bold bg-slate-200 text-slate-500 cursor-not-allowed flex items-center justify-center gap-2">
                   <FileText size={20}/>
                   Risco Crítico: Relatório Bloqueado
                 </button>
               ) : (
-                // Se for VIÁVEL/ALERTA, gera o PDF
                 <PDFDownloadLink 
                   document={
                     <BidReportPDF 
