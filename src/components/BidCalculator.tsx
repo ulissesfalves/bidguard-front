@@ -1,5 +1,5 @@
-import React, { useState, useMemo, useEffect } from 'react';
-import { AlertTriangle, Lock, Unlock, Calculator, FileText, AlertOctagon, Info, Loader2 } from 'lucide-react';
+import { useState, useMemo, useEffect } from 'react';
+import { AlertTriangle, Lock, Calculator, FileText, AlertOctagon, Info, Loader2 } from 'lucide-react';
 import { clsx } from 'clsx';
 import { twMerge } from 'tailwind-merge';
 import { supabase } from '../lib/supabase'; // Importando a conexão real
