@@ -1,4 +1,4 @@
-import { AlertOctagon, ArrowRight, ShieldCheck, Fuel, Wrench, FileWarning, CheckCircle2 } from 'lucide-react';
+import { AlertOctagon, ArrowRight, ShieldCheck, Fuel, Wrench, FileWarning } from 'lucide-react';
 
 interface LandingPageProps {
   onStart: () => void;
