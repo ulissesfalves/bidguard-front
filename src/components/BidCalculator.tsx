@@ -5,6 +5,7 @@ import { twMerge } from 'tailwind-merge';
 import { supabase } from '../lib/supabase';
 import { PDFDownloadLink } from '@react-pdf/renderer';
 import { BidReportPDF } from './BidReportPDF';
+import { UpgradeModal } from './UpgradeModal'; //
 
 // --- UTILITÁRIOS ---
 
@@ -26,6 +27,10 @@ export const BidCalculator = () => {
 
   const [isLoading, setIsLoading] = useState(true);
   const [selectedState, setSelectedState] = useState('SP');
+
+  // ESTADO DO FREEMIUM
+  const [isPro, setIsPro] = useState(false); // Por padrão, ninguém é PRO ainda
+  const [showUpgradeModal, setShowUpgradeModal] = useState(false);
   
   const [scope, setScope] = useState({
     contractMonths: 12,
@@ -428,13 +433,14 @@ export const BidCalculator = () => {
                 </div>
               </div>
 
-              {/* CTA INTELIGENTE */}
+              {/* CTA INTELIGENTE COM FREEMIUM LOCK */}
               {calculation.status === 'DANGER' ? (
                 <button disabled className="w-full py-4 rounded-xl font-bold bg-slate-200 text-slate-500 cursor-not-allowed flex items-center justify-center gap-2">
                   <FileText size={20}/>
                   Risco Crítico: Relatório Bloqueado
                 </button>
-              ) : (
+              ) : isPro ? (
+                // USUÁRIO PRO: Baixa direto
                 <PDFDownloadLink 
                   document={
                     <BidReportPDF 
@@ -454,11 +460,27 @@ export const BidCalculator = () => {
                       className="w-full py-4 rounded-xl font-bold shadow-lg transition-transform hover:scale-[1.02] flex items-center justify-center gap-2 bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-70"
                     >
                       {loading ? <Loader2 className="animate-spin"/> : <FileText size={20}/>}
-                      {loading ? 'Gerando Documento...' : 'Baixar Relatório de Defesa (PDF)'}
+                      {loading ? 'Gerando Documento...' : 'Baixar Relatório Oficial (PRO)'}
                     </button>
                   )}
                 </PDFDownloadLink>
+              ) : (
+                // USUÁRIO GRÁTIS: Abre Modal de Venda
+                <button 
+                  onClick={() => setShowUpgradeModal(true)}
+                  className="w-full py-4 rounded-xl font-bold shadow-lg transition-transform hover:scale-[1.02] flex items-center justify-center gap-2 bg-slate-900 text-white hover:bg-slate-800"
+                >
+                  <Lock size={20} className="text-yellow-400"/>
+                  Desbloquear Relatório de Defesa
+                </button>
               )}
+
+              {/* MODAL DE UPGRADE */}
+              <UpgradeModal 
+                isOpen={showUpgradeModal} 
+                onClose={() => setShowUpgradeModal(false)}
+                onUpgrade={() => alert("Aqui vamos integrar o Checkout (Stripe/Pix) em breve!")}
+              />
 
               <p className="text-[10px] text-center text-slate-400 px-4">
                 Esta análise é uma simulação baseada em parâmetros informados. O resultado indica nível de risco, não garantia de lucro.
