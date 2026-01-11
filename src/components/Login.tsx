@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { X, Mail, Lock, User, ArrowRight, KeyRound } from 'lucide-react';
+import { X, Mail, Lock, ArrowRight, KeyRound } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 
 // Mantivemos a estrutura de props, assumindo que seu Login.tsx usa isOpen/onClose
