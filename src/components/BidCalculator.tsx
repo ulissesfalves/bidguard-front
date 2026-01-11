@@ -1,5 +1,5 @@
 import { useState, useMemo, useEffect } from 'react';
-import { AlertTriangle, Lock, Calculator, FileText, Info, Loader2, ArrowRight } from 'lucide-react';
+import { AlertTriangle, Lock, Calculator, FileText, Loader2 } from 'lucide-react';
 import { clsx } from 'clsx';
 import { twMerge } from 'tailwind-merge';
 import { supabase } from '../lib/supabase';
