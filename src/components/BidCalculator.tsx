@@ -29,7 +29,7 @@ export const BidCalculator = () => {
   const [selectedState, setSelectedState] = useState('SP');
 
   // ESTADO DO FREEMIUM
-  const [isPro, setIsPro] = useState(false); // Por padrão, ninguém é PRO ainda
+  const [isPro] = useState(false); // Por padrão, ninguém é PRO ainda
   const [showUpgradeModal, setShowUpgradeModal] = useState(false);
   
   const [scope, setScope] = useState({
@@ -479,7 +479,7 @@ export const BidCalculator = () => {
               <UpgradeModal 
                 isOpen={showUpgradeModal} 
                 onClose={() => setShowUpgradeModal(false)}
-                onUpgrade={() => alert("Aqui vamos integrar o Checkout (Stripe/Pix) em breve!")}
+                // onUpgrade={() => alert("Aqui vamos integrar o Checkout (Stripe/Pix) em breve!")}
               />
 
               <p className="text-[10px] text-center text-slate-400 px-4">
