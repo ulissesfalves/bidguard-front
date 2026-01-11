@@ -1,85 +1,90 @@
-import { X, CheckCircle2, FileText, ShieldCheck, Zap } from 'lucide-react';
+import { X, CheckCircle2, FileText, ShieldCheck, Zap, Lock } from 'lucide-react';
 
 interface UpgradeModalProps {
   isOpen: boolean;
   onClose: () => void;
-  userEmail?: string; // Recebe o e-mail para facilitar o checkout
+  userEmail?: string;
 }
 
 export const UpgradeModal = ({ isOpen, onClose, userEmail }: UpgradeModalProps) => {
   if (!isOpen) return null;
 
-  // Seu Link Oficial da Stripe (Atualizado)
-  const STRIPE_LINK = "https://buy.stripe.com/eVq5kwe1Ja3Q5jRbhO1sQ00";
-
-  // Função para montar a URL com o e-mail pré-preenchido
+  const STRIPE_LINK = "https://buy.stripe.com/test_8x27sE0aL6Q07n38mgebu00"; 
   const handleUpgrade = () => {
     let url = STRIPE_LINK;
-    
     if (userEmail) {
-      // Adiciona o e-mail na URL para o Stripe já saber quem é
       url += `?prefilled_email=${encodeURIComponent(userEmail)}`;
     }
-    
-    window.open(url, '_blank'); // Abre em nova aba
+    window.open(url, '_blank');
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-in fade-in duration-200">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/80 backdrop-blur-sm animate-in fade-in duration-200">
       <div className="bg-white rounded-2xl shadow-2xl max-w-lg w-full overflow-hidden border border-slate-200 scale-100 animate-in zoom-in-95 duration-200">
         
-        {/* Header */}
-        <div className="bg-slate-50 p-6 border-b border-slate-100 flex justify-between items-start">
+        {/* Cabeçalho Premium */}
+        <div className="bg-slate-900 p-6 flex justify-between items-start border-b border-slate-800">
           <div>
-            <h2 className="text-xl font-bold text-slate-900 flex items-center gap-2">
-              <ShieldCheck className="text-blue-600" /> Plano PRO
+            <div className="flex items-center gap-2 mb-1">
+              <span className="bg-yellow-500 text-slate-900 text-[10px] font-black px-2 py-0.5 rounded uppercase tracking-wider">Recomendado</span>
+            </div>
+            <h2 className="text-2xl font-bold text-white flex items-center gap-2">
+              BidGuard <span className="text-yellow-400">PRO</span>
             </h2>
-            <p className="text-sm text-slate-500 mt-1">Desbloqueie o poder total da auditoria.</p>
+            <p className="text-sm text-slate-400 mt-1">Ferramentas de auditoria para quem joga sério.</p>
           </div>
-          <button onClick={onClose} className="text-slate-400 hover:text-slate-600 transition-colors">
+          <button onClick={onClose} className="text-slate-400 hover:text-white transition-colors">
             <X size={24} />
           </button>
         </div>
 
-        {/* Body */}
-        <div className="p-8 space-y-6">
-          <div className="bg-blue-50 border border-blue-100 rounded-xl p-4 flex gap-4 items-start">
-            <div className="bg-blue-100 p-2 rounded-lg">
-              <FileText className="text-blue-600" size={24} />
+        {/* Corpo da Oferta */}
+        <div className="p-8 space-y-8">
+          
+          {/* O Preço */}
+          <div className="text-center">
+            <div className="flex items-end justify-center gap-1 text-slate-900">
+              <span className="text-4xl font-black">R$ 49,90</span>
+              <span className="text-lg text-slate-500 font-medium mb-1">/mês</span>
             </div>
-            <div>
-              <h3 className="font-bold text-blue-900 text-sm">Relatório Oficial de Auditoria</h3>
-              <p className="text-xs text-blue-700 mt-1 leading-relaxed">
-                Documento válido juridicamente para defesa de reequilíbrio econômico-financeiro.
-              </p>
+            <p className="text-xs text-slate-400 mt-2">Cancele quando quiser. Sem fidelidade.</p>
+          </div>
+
+          {/* Benefícios Visuais */}
+          <div className="space-y-4 bg-slate-50 p-6 rounded-xl border border-slate-100">
+            <div className="flex items-start gap-3">
+              <div className="bg-blue-100 p-1.5 rounded-full mt-0.5">
+                <FileText className="text-blue-600" size={18} />
+              </div>
+              <div>
+                <h4 className="font-bold text-slate-900 text-sm">Relatórios Oficiais (PDF)</h4>
+                <p className="text-xs text-slate-600 leading-relaxed">Gere documentos ilimitados com validade técnica para anexar em processos licitatórios.</p>
+              </div>
+            </div>
+
+            <div className="flex items-start gap-3">
+              <div className="bg-green-100 p-1.5 rounded-full mt-0.5">
+                <ShieldCheck className="text-green-600" size={18} />
+              </div>
+              <div>
+                <h4 className="font-bold text-slate-900 text-sm">Auditoria de Combustível (ANP)</h4>
+                <p className="text-xs text-slate-600 leading-relaxed">Acesso exclusivo à base de dados semanal ponderada para cálculo de defasagem.</p>
+              </div>
             </div>
           </div>
 
-          <div className="space-y-3">
-            <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider">Incluso no plano:</h4>
-            <ul className="space-y-2">
-              <li className="flex items-center gap-2 text-sm text-slate-700">
-                <CheckCircle2 size={16} className="text-green-500" /> Download Ilimitado de PDF
-              </li>
-              <li className="flex items-center gap-2 text-sm text-slate-700">
-                <CheckCircle2 size={16} className="text-green-500" /> Sem marca d'água
-              </li>
-              <li className="flex items-center gap-2 text-sm text-slate-700">
-                <CheckCircle2 size={16} className="text-green-500" /> Suporte Prioritário
-              </li>
-            </ul>
-          </div>
-
-          <div className="pt-4">
+          {/* Botão de Ação */}
+          <div className="pt-2 space-y-3">
             <button 
               onClick={handleUpgrade}
-              className="w-full py-4 rounded-xl bg-green-600 text-white font-bold text-lg shadow-lg hover:bg-green-500 transition-all hover:scale-[1.02] flex items-center justify-center gap-2"
+              className="w-full py-4 rounded-xl bg-blue-600 text-white font-bold text-lg shadow-lg hover:bg-blue-700 hover:shadow-blue-500/25 transition-all hover:scale-[1.02] flex items-center justify-center gap-2"
             >
-              <Zap size={20} fill="currentColor" /> Liberar Acesso (R$ 29,90/mês)
+              <Zap size={20} fill="currentColor" /> Assinar Agora
             </button>
-            <p className="text-[10px] text-center text-slate-400 mt-3">
-              Pagamento processado pela Stripe. Ambiente criptografado.
-            </p>
+            
+            <div className="flex items-center justify-center gap-2 text-[10px] text-slate-400">
+              <Lock size={10} /> Pagamento seguro via Stripe • Acesso liberado imediatamente
+            </div>
           </div>
         </div>
       </div>
