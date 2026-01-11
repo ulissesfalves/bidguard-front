@@ -1,11 +1,12 @@
 import { useState, useMemo, useEffect } from 'react';
-import { AlertTriangle, Lock, Calculator, FileText, AlertOctagon, Info, Loader2 } from 'lucide-react';
+import { AlertTriangle, Lock, Calculator, FileText, Info, Loader2 } from 'lucide-react';
 import { clsx } from 'clsx';
 import { twMerge } from 'tailwind-merge';
 import { supabase } from '../lib/supabase';
 import { PDFDownloadLink } from '@react-pdf/renderer';
 import { BidReportPDF } from './BidReportPDF';
 import { UpgradeModal } from './UpgradeModal';
+import { Logo } from './Logo'; // <--- IMPORT DA NOVA LOGO
 
 // --- UTILITÁRIOS ---
 
@@ -30,7 +31,7 @@ export const BidCalculator = () => {
   // ESTADO DO FREEMIUM
   const [isPro, setIsPro] = useState(false);
 
-// FUNÇÃO DE VERIFICAÇÃO DE STATUS
+  // FUNÇÃO DE VERIFICAÇÃO DE STATUS (Versão Otimizada e Silenciosa)
   const checkUserStatus = async () => {
       // 1. Busca o usuário atual
       const { data: { user } } = await supabase.auth.getUser();
@@ -49,11 +50,11 @@ export const BidCalculator = () => {
         setIsPro(true);
       }
   };
-  
+
   // EFEITO: Roda apenas uma vez quando a tela carrega
   useEffect(() => {
     checkUserStatus();
-  }, []); // <--- CORREÇÃO AQUI: Array vazio, removemos 'session'
+  }, []);
 
   const [showUpgradeModal, setShowUpgradeModal] = useState(false);
   
@@ -199,9 +200,8 @@ export const BidCalculator = () => {
       {/* CABEÇALHO */}
       <header className="flex flex-col md:flex-row justify-between items-start md:items-center bg-white p-6 rounded-xl shadow-sm border border-slate-200">
         <div>
-          <h1 className="text-2xl font-bold text-slate-900 flex items-center gap-2">
-            <AlertOctagon className="text-blue-600" /> BidGuard <span className="text-xs bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full">LIVE</span>
-          </h1>
+          {/* LOGO NOVA AQUI */}
+          <Logo showBadge={true} />
           <p className="text-sm text-slate-500 mt-1">Análise de Viabilidade Econômico-Operacional</p>
         </div>
         <div className="mt-4 md:mt-0 flex flex-col items-end">
@@ -503,7 +503,6 @@ export const BidCalculator = () => {
               <UpgradeModal 
                 isOpen={showUpgradeModal} 
                 onClose={() => setShowUpgradeModal(false)}
-                // Email passado via função interna se necessário, mas para o link simples já funciona
               />
 
               <p className="text-[10px] text-center text-slate-400 px-4">

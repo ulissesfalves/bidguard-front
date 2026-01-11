@@ -1,14 +1,14 @@
 import { useState, useEffect } from 'react';
 import { supabase } from './lib/supabase';
 import { Login } from './components/Login';
-import { LandingPage } from './components/LandingPage'; // Importe a Landing
+import { LandingPage } from './components/LandingPage';
 import BidCalculator from './components/BidCalculator';
-import { Loader2 } from 'lucide-react';
+import { Loader2, LogOut } from 'lucide-react';
 
 function App() {
   const [session, setSession] = useState<any>(null);
   const [loading, setLoading] = useState(true);
-  const [showLogin, setShowLogin] = useState(false); // Novo estado para controlar LP vs Login
+  const [showLogin, setShowLogin] = useState(false);
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -33,43 +33,38 @@ function App() {
     );
   }
 
-  // LÓGICA DE NAVEGAÇÃO
-  
-  // 1. Se tem sessão, vai direto pra Calculadora (Produto)
+  // 1. USUÁRIO LOGADO: Mostra o Produto (Calculadora)
   if (session) {
     return (
-      <div className="relative">
-        <div className="absolute top-4 right-4 z-50 md:top-8 md:right-8">
+      <div className="relative animate-in fade-in duration-500">
+        {/* Botão de Logout Flutuante */}
+        <div className="absolute top-4 right-4 z-50 md:top-6 md:right-6">
           <button 
             onClick={() => supabase.auth.signOut()}
-            className="text-xs text-slate-400 hover:text-red-500 font-medium transition-colors bg-white/80 px-3 py-1 rounded-full border border-slate-200 shadow-sm backdrop-blur-sm"
+            className="flex items-center gap-2 text-xs font-bold text-slate-500 hover:text-red-600 transition-all bg-white/90 hover:bg-red-50 px-4 py-2 rounded-full border border-slate-200 shadow-sm backdrop-blur-sm"
           >
-            Sair do Sistema
+            <LogOut size={14} />
+            SAIR
           </button>
         </div>
+        
         <BidCalculator />
       </div>
     );
   }
 
-  // 2. Se não tem sessão e usuário pediu pra logar, mostra Login
-  if (showLogin) {
-    return (
-      <div>
-        {/* Botãozinho pra voltar pra Home caso desista */}
-        <button 
-          onClick={() => setShowLogin(false)}
-          className="absolute top-4 left-4 text-sm text-slate-500 hover:text-blue-600 z-50"
-        >
-          ← Voltar
-        </button>
-        <Login />
-      </div>
-    );
-  }
-
-  // 3. Se não tem sessão e nem pediu login, mostra Landing Page (Venda)
-  return <LandingPage onStart={() => setShowLogin(true)} />;
+  // 2. USUÁRIO DESLOGADO: Mostra Landing Page + Modal de Login (se ativado)
+  return (
+    <>
+      <LandingPage onStart={() => setShowLogin(true)} />
+      
+      {/* O Login agora é um Modal que abre por cima da Landing Page */}
+      <Login 
+        isOpen={showLogin} 
+        onClose={() => setShowLogin(false)} 
+      />
+    </>
+  );
 }
 
 export default App;

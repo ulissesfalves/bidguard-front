@@ -1,4 +1,5 @@
-import { AlertOctagon, ArrowRight, ShieldCheck, Fuel, Wrench, FileWarning } from 'lucide-react';
+import { ArrowRight, ShieldCheck, Fuel, Wrench, FileWarning } from 'lucide-react';
+import { Logo } from './Logo'; // <--- Import da nova Logo
 
 interface LandingPageProps {
   onStart: () => void;
@@ -10,10 +11,9 @@ export const LandingPage = ({ onStart }: LandingPageProps) => {
       
       {/* NAVBAR */}
       <nav className="max-w-7xl mx-auto px-6 h-20 flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <AlertOctagon className="text-blue-600" size={28} />
-          <span className="text-xl font-bold tracking-tight">BidGuard</span>
-        </div>
+        {/* Nova Logo Componentizada */}
+        <Logo size="md" /> 
+        
         <button 
           onClick={onStart}
           className="text-sm font-medium text-slate-600 hover:text-blue-600 transition-colors"
