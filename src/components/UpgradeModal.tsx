@@ -1,4 +1,4 @@
-import { X, CheckCircle2, FileText, ShieldCheck, Zap, Lock } from 'lucide-react';
+import { X, FileText, ShieldCheck, Zap, Lock } from 'lucide-react';
 
 interface UpgradeModalProps {
   isOpen: boolean;
