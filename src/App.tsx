@@ -3,22 +3,32 @@ import { supabase } from './lib/supabase';
 import { Login } from './components/Login';
 import { LandingPage } from './components/LandingPage';
 import BidCalculator from './components/BidCalculator';
+import { ResetPassword } from './components/ResetPassword'; // <--- Importamos a nova tela
 import { Loader2, LogOut } from 'lucide-react';
 
 function App() {
   const [session, setSession] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [showLogin, setShowLogin] = useState(false);
+  const [isRecoveryMode, setIsRecoveryMode] = useState(false); // <--- Novo Estado
 
   useEffect(() => {
+    // 1. Verifica sessão inicial
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session);
       setLoading(false);
     });
 
+    // 2. Escuta mudanças na autenticação
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, session) => {
+    } = supabase.auth.onAuthStateChange((event, session) => {
+      
+      // DETECTOR DE RECUPERAÇÃO DE SENHA 🕵️‍♂️
+      if (event === 'PASSWORD_RECOVERY') {
+        setIsRecoveryMode(true);
+      }
+
       setSession(session);
     });
 
@@ -33,11 +43,15 @@ function App() {
     );
   }
 
-  // 1. USUÁRIO LOGADO: Mostra o Produto (Calculadora)
+  // 0. MODO DE RECUPERAÇÃO (Prioridade Máxima)
+  if (isRecoveryMode) {
+    return <ResetPassword />;
+  }
+
+  // 1. USUÁRIO LOGADO: Mostra o Produto
   if (session) {
     return (
       <div className="relative animate-in fade-in duration-500">
-        {/* Botão de Logout Flutuante */}
         <div className="absolute top-4 right-4 z-50 md:top-6 md:right-6">
           <button 
             onClick={() => supabase.auth.signOut()}
@@ -53,12 +67,11 @@ function App() {
     );
   }
 
-  // 2. USUÁRIO DESLOGADO: Mostra Landing Page + Modal de Login (se ativado)
+  // 2. USUÁRIO DESLOGADO: Mostra Landing Page
   return (
     <>
       <LandingPage onStart={() => setShowLogin(true)} />
       
-      {/* O Login agora é um Modal que abre por cima da Landing Page */}
       <Login 
         isOpen={showLogin} 
         onClose={() => setShowLogin(false)} 
