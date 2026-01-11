@@ -9,8 +9,8 @@ interface UpgradeModalProps {
 export const UpgradeModal = ({ isOpen, onClose, userEmail }: UpgradeModalProps) => {
   if (!isOpen) return null;
 
-  // const STRIPE_LINK = "https://buy.stripe.com/test_8x27sE0aL6Q07n38mgebu00";
-  const STRIPE_LINK = "https://buy.stripe.com/test_eVq5kwe1Ja3Q5jRbhO1sQ00";
+  // const STRIPE_LINK = "https://buy.stripe.com/test_eVq5kwe1Ja3Q5jRbhO1sQ00";
+  const STRIPE_LINK = "https://buy.stripe.com/eVq5kwe1Ja3Q5jRbhO1sQ00";
   const handleUpgrade = () => {
     let url = STRIPE_LINK;
     if (userEmail) {
