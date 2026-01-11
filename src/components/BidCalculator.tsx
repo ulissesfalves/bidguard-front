@@ -29,7 +29,46 @@ export const BidCalculator = () => {
   const [selectedState, setSelectedState] = useState('SP');
 
   // ESTADO DO FREEMIUM
-  const [isPro] = useState(false); // Por padrão, ninguém é PRO ainda
+  const [isPro, setIsPro] = useState(false);
+
+  useEffect(() => {
+    checkUserStatus();
+  }, [session]);
+
+  const checkUserStatus = async () => {
+      // 1. Garante que pegamos o usuário atual da sessão
+      const { data: { user } } = await supabase.auth.getUser();
+      
+      if (!user?.email) {
+        console.log("❌ Ninguém logado (ou sem e-mail).");
+        return;
+      }
+
+      console.log("🕵️ Verificando perfil para:", user.email);
+
+      // 2. Tenta buscar no banco
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('*') // Traz tudo para checarmos
+        .eq('email', user.email)
+        .single();
+
+      // 3. Mostra o resultado real no console
+      if (error) {
+        console.error("🔥 Erro ao buscar no Supabase:", error);
+      } else {
+        console.log("✅ Dados recebidos do banco:", data);
+      }
+
+      // 4. Aplica a lógica
+      if (data?.is_pro === true) {
+        console.log("🎉 É PRO! Liberando acesso...");
+        setIsPro(true);
+      } else {
+        console.log("🔒 Não é PRO (ou is_pro é false/null).");
+      }
+    };
+ 
   const [showUpgradeModal, setShowUpgradeModal] = useState(false);
   
   const [scope, setScope] = useState({
