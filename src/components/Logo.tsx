@@ -21,7 +21,7 @@ export const Logo = ({ variant = 'dark', className, showBadge = false, size = 'm
          Se o seu arquivo for jpg, mude abaixo para src="/logo.jpg"
       */}
       <img 
-        src="/logo.jpg" 
+        src="/logo.png" 
         alt="BidGuard Logo" 
         className={clsx("object-contain", imgSize)} 
       />
