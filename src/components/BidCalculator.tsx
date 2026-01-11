@@ -1,5 +1,5 @@
 import { useState, useMemo, useEffect } from 'react';
-import { AlertTriangle, Lock, Calculator, FileText, Loader2 } from 'lucide-react';
+import { AlertTriangle, Lock, Calculator, FileText, Loader2, Scale } from 'lucide-react';
 import { clsx } from 'clsx';
 import { twMerge } from 'tailwind-merge';
 import { supabase } from '../lib/supabase';
@@ -8,7 +8,6 @@ import { BidReportPDF } from './BidReportPDF';
 import { UpgradeModal } from './UpgradeModal';
 import { Logo } from './Logo';
 
-// --- UTILITÁRIOS ---
 const formatCurrency = (value: number) => {
   return new Intl.NumberFormat('pt-BR', {
     style: 'currency',
@@ -18,17 +17,14 @@ const formatCurrency = (value: number) => {
   }).format(value);
 };
 
-// --- TIPAGEM ---
 type EditableCostKey = 'dieselPrice' | 'operatorSalary' | 'machineValue';
 
 export const BidCalculator = () => {
-  // --- ESTADO (State) ---
   const [isLoading, setIsLoading] = useState(true);
   const [selectedState, setSelectedState] = useState('SP');
   const [isPro, setIsPro] = useState(false);
   const [showUpgradeModal, setShowUpgradeModal] = useState(false);
   
-  // Verifica Status PRO
   useEffect(() => {
     const checkUserStatus = async () => {
       const { data: { user } } = await supabase.auth.getUser();
@@ -39,7 +35,6 @@ export const BidCalculator = () => {
     checkUserStatus();
   }, []);
 
-  // Escopo (Aberto para todos)
   const [scope, setScope] = useState({
     contractMonths: 12,
     monthlyHours: 200,
@@ -50,7 +45,6 @@ export const BidCalculator = () => {
 
   const [riskLevel, setRiskLevel] = useState<'LOW' | 'MEDIUM' | 'HIGH'>('MEDIUM');
 
-  // Custos (Bloqueados para Free)
   const [costs, setCosts] = useState({
     dieselPrice: { system: 0, user: 0 },
     operatorSalary: { system: 0, user: 0 },
@@ -62,7 +56,6 @@ export const BidCalculator = () => {
 
   const [editedFields, setEditedFields] = useState<string[]>([]);
 
-  // Busca dados (ANP/FIPE)
   useEffect(() => {
     async function fetchData() {
       setIsLoading(true);
@@ -89,15 +82,13 @@ export const BidCalculator = () => {
     fetchData();
   }, [selectedState]);
 
-  // Handler de Edição
   const handleCostChange = (field: EditableCostKey, newValue: string) => {
-    if (!isPro) return; // Bloqueia edição se não for PRO
+    if (!isPro) return;
     const numericValue = parseFloat(newValue.replace(/[^0-9.]/g, '')) || 0;
     setCosts(prev => ({ ...prev, [field]: { ...prev[field], user: numericValue } }));
     if (!editedFields.includes(field)) setEditedFields(prev => [...prev, field]);
   };
 
-  // --- MOTOR DE CÁLCULO ---
   const calculation = useMemo(() => {
     if (isLoading) return null;
     let maintMult = riskLevel === 'MEDIUM' ? 1.2 : riskLevel === 'HIGH' ? 1.5 : 1.0;
@@ -112,18 +103,20 @@ export const BidCalculator = () => {
     const totalMonthlyCost = operatorCost + capitalCostMonthly + monthlyFuelCost + monthlyMaintenance;
     const projectedProfit = scope.revenueCap - totalMonthlyCost;
     const marginPercent = (projectedProfit / scope.revenueCap) * 100;
+    
+    // Novo Cálculo: Total do Contrato
+    const totalContractProfit = projectedProfit * scope.contractMonths;
 
     let status: 'DANGER' | 'WARNING' | 'SAFE' = 'SAFE';
     if (marginPercent < 5) status = 'DANGER';
     else if (marginPercent < 15) status = 'WARNING';
 
-    return { totalMonthlyCost, projectedProfit, marginPercent, status };
+    return { totalMonthlyCost, projectedProfit, marginPercent, status, totalContractProfit };
   }, [costs, scope, riskLevel, isLoading]);
 
   return (
     <div className="max-w-4xl mx-auto p-4 space-y-6 bg-slate-50 min-h-screen font-sans text-slate-800">
       
-      {/* CABEÇALHO */}
       <header className="flex flex-col md:flex-row justify-between items-start md:items-center bg-white p-6 rounded-xl shadow-sm border border-slate-200">
         <div>
           <Logo showBadge={true} />
@@ -148,7 +141,6 @@ export const BidCalculator = () => {
           
           <div className="md:col-span-7 space-y-6">
             
-            {/* CARD 1: ESCOPO (Aberto) */}
             <section className="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
               <h2 className="text-lg font-semibold flex items-center gap-2 mb-4">
                 <FileText size={20} className="text-slate-400"/> Dados do Edital
@@ -196,7 +188,6 @@ export const BidCalculator = () => {
               </div>
             </section>
 
-            {/* CARD 2: RISCO */}
             <section className="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
                <h2 className="text-lg font-semibold flex items-center gap-2 mb-4">
                 <AlertTriangle size={20} className="text-slate-400"/> Severidade (Desgaste)
@@ -217,28 +208,27 @@ export const BidCalculator = () => {
               </div>
             </section>
 
-            {/* CARD 3: AUDITORIA (BLOQUEADO/BORRADO SE NÃO FOR PRO) */}
+            {/* AUDITORIA (BLUR COM CONTEXTO) */}
             <section className="bg-white p-6 rounded-xl shadow-sm border border-slate-200 relative overflow-hidden">
               <div className="flex justify-between items-center mb-4">
                 <h2 className="text-lg font-semibold flex items-center gap-2">
-                  <Calculator size={20} className="text-slate-400"/> Custos Base (ANP/FIPE)
+                  <Calculator size={20} className="text-slate-400"/> Custos Base
                 </h2>
                 {isPro ? (
                   <span className="text-xs bg-green-100 text-green-700 px-2 py-1 rounded-full font-bold">Modo Edição Ativo</span>
                 ) : (
                   <span className="text-xs bg-slate-100 text-slate-500 px-2 py-1 rounded-full font-bold flex items-center gap-1">
-                    <Lock size={10} /> Padrão Sistema
+                    <Lock size={10} /> Base Oficial
                   </span>
                 )}
               </div>
 
-              {/* OVERLAY DE BLOQUEIO */}
               {!isPro && (
                 <div className="absolute inset-0 top-14 bg-white/60 backdrop-blur-[2px] z-10 flex flex-col items-center justify-center text-center p-4">
                   <Lock className="text-slate-400 mb-2" size={32} />
-                  <h3 className="font-bold text-slate-800">Detalhamento Bloqueado</h3>
+                  <h3 className="font-bold text-slate-800">Dados Oficiais Protegidos</h3>
                   <p className="text-sm text-slate-600 mb-4 max-w-xs">
-                    Estamos usando os custos oficiais (ANP/Sindicato). Para ver o detalhe ou editar, libere o Laudo Técnico.
+                    O cálculo utiliza índices da ANP, FIPE e Sindicatos. Libere o Laudo Técnico para visualizar e editar os custos.
                   </p>
                   <button onClick={() => setShowUpgradeModal(true)} className="text-sm font-bold text-blue-600 hover:underline">
                     Liberar Acesso Audit &rarr;
@@ -265,12 +255,22 @@ export const BidCalculator = () => {
                 ))}
               </div>
             </section>
+
+            {/* DISCLAIMER JURÍDICO */}
+            <div className="flex gap-2 items-start text-[10px] text-slate-400 px-2">
+               <Scale size={12} className="shrink-0 mt-0.5"/>
+               <p>
+                 Disclaimer: Os cálculos utilizam médias regionais (ANP/FIPE/Sindicatos) como referência. 
+                 O BidGuard é uma ferramenta de apoio à decisão e não substitui a responsabilidade técnica do orçamentista.
+               </p>
+            </div>
+
           </div>
 
           <div className="md:col-span-5">
             <div className="sticky top-6 space-y-4">
               
-              {/* RESULTADO (O SUSTO) */}
+              {/* RESULTADO (PREJUÍZO MENSAL E TOTAL) */}
               <div className="bg-slate-900 text-white p-6 rounded-xl shadow-lg relative overflow-hidden">
                 <h3 className="text-slate-400 text-xs font-bold uppercase tracking-wider mb-4 border-b border-slate-700 pb-2">
                   Resultado da Auditoria
@@ -278,7 +278,7 @@ export const BidCalculator = () => {
                 
                 <div className="space-y-4 relative z-10">
                   <div className="flex justify-between items-end">
-                    <span className="text-slate-400 text-sm">Receita</span>
+                    <span className="text-slate-400 text-sm">Receita Mensal</span>
                     <span className="text-lg font-mono">{formatCurrency(scope.revenueCap)}</span>
                   </div>
                   
@@ -291,16 +291,25 @@ export const BidCalculator = () => {
 
                   <div className="border-t border-slate-700 pt-4 text-center">
                     <span className={clsx("text-sm font-bold uppercase block mb-1", calculation.projectedProfit < 0 ? "text-red-500" : "text-green-400")}>
-                      {calculation.projectedProfit < 0 ? "PREJUÍZO MENSAL ESTIMADO" : "LUCRO OPERACIONAL"}
+                      {calculation.projectedProfit < 0 ? "PREJUÍZO MENSAL ESTIMADO" : "LUCRO OPERACIONAL MENSAL"}
                     </span>
-                    <div className={clsx("font-mono font-black", calculation.projectedProfit < 0 ? "text-4xl text-red-500" : "text-3xl text-green-400")}>
+                    <div className={clsx("font-mono font-black leading-none", calculation.projectedProfit < 0 ? "text-4xl text-red-500" : "text-3xl text-green-400")}>
                       {formatCurrency(calculation.projectedProfit)}
                     </div>
+
+                    {/* SANGRIA TOTAL DO CONTRATO */}
+                    {calculation.projectedProfit < 0 && (
+                      <div className="mt-4 pt-3 border-t border-slate-800 animate-pulse">
+                         <span className="text-xs text-red-400 uppercase font-bold">Projeção no Contrato ({scope.contractMonths} meses)</span>
+                         <div className="text-xl font-mono font-bold text-red-500">
+                           {formatCurrency(calculation.totalContractProfit)}
+                         </div>
+                      </div>
+                    )}
                   </div>
                 </div>
               </div>
 
-              {/* BOTÃO CTA */}
               {isPro ? (
                 <PDFDownloadLink 
                   document={<BidReportPDF data={calculation} scope={scope} costs={costs} editedFields={editedFields} state={selectedState}/>}
