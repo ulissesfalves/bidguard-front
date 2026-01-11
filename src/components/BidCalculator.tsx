@@ -5,7 +5,7 @@ import { twMerge } from 'tailwind-merge';
 import { supabase } from '../lib/supabase';
 import { PDFDownloadLink } from '@react-pdf/renderer';
 import { BidReportPDF } from './BidReportPDF';
-import { UpgradeModal } from './UpgradeModal'; //
+import { UpgradeModal } from './UpgradeModal';
 
 // --- UTILITÁRIOS ---
 
@@ -18,8 +18,7 @@ const formatCurrency = (value: number) => {
   }).format(value);
 };
 
-// --- TIPAGEM PARA CORREÇÃO DO BUILD ---
-// Define quais campos são objetos complexos {system, user}
+// --- TIPAGEM ---
 type EditableCostKey = 'dieselPrice' | 'operatorSalary' | 'machineValue';
 
 export const BidCalculator = () => {
@@ -31,12 +30,9 @@ export const BidCalculator = () => {
   // ESTADO DO FREEMIUM
   const [isPro, setIsPro] = useState(false);
 
-  useEffect(() => {
-    checkUserStatus();
-  }, [session]);
-
+  // FUNÇÃO DE VERIFICAÇÃO DE STATUS
   const checkUserStatus = async () => {
-      // 1. Garante que pegamos o usuário atual da sessão
+      // 1. Busca o usuário atual direto da sessão do Supabase
       const { data: { user } } = await supabase.auth.getUser();
       
       if (!user?.email) {
@@ -46,10 +42,10 @@ export const BidCalculator = () => {
 
       console.log("🕵️ Verificando perfil para:", user.email);
 
-      // 2. Tenta buscar no banco
+      // 2. Tenta buscar no banco de dados
       const { data, error } = await supabase
         .from('profiles')
-        .select('*') // Traz tudo para checarmos
+        .select('*')
         .eq('email', user.email)
         .single();
 
@@ -67,8 +63,13 @@ export const BidCalculator = () => {
       } else {
         console.log("🔒 Não é PRO (ou is_pro é false/null).");
       }
-    };
- 
+  };
+
+  // EFEITO: Roda apenas uma vez quando a tela carrega
+  useEffect(() => {
+    checkUserStatus();
+  }, []); // <--- CORREÇÃO AQUI: Array vazio, removemos 'session'
+
   const [showUpgradeModal, setShowUpgradeModal] = useState(false);
   
   const [scope, setScope] = useState({
@@ -85,9 +86,9 @@ export const BidCalculator = () => {
     dieselPrice: { system: 0, user: 0 },
     operatorSalary: { system: 0, user: 0 },
     machineValue: { system: 350000, user: 350000 },
-    socialCharges: 0.85, // Número simples (não editável diretamente no grid)
-    consumption: 9.0,    // Número simples
-    maintenanceRate: 0.06 // Número simples
+    socialCharges: 0.85,
+    consumption: 9.0,
+    maintenanceRate: 0.06
   });
 
   const [editedFields, setEditedFields] = useState<string[]>([]);
@@ -142,9 +143,8 @@ export const BidCalculator = () => {
     fetchData();
   }, [selectedState]);
 
-  // --- LÓGICA DE AUDITORIA (CORRIGIDA) ---
+  // --- LÓGICA DE AUDITORIA ---
   
-  // Agora aceita APENAS as chaves que são objetos editáveis
   const handleCostChange = (field: EditableCostKey, newValue: string) => {
     const numericValue = parseFloat(newValue.replace(/[^0-9.]/g, '')) || 0;
     
@@ -366,7 +366,7 @@ export const BidCalculator = () => {
                   { key: 'operatorSalary', label: 'Salário Base (Mês)' },
                   { key: 'machineValue', label: 'Valor Máquina (FIPE)' },
                 ].map((item) => {
-                  const key = item.key as EditableCostKey; // Type Casting Seguro
+                  const key = item.key as EditableCostKey;
                   const isEdited = editedFields.includes(key);
                   const sysVal = costs[key].system;
                   const userVal = costs[key].user;
@@ -518,7 +518,7 @@ export const BidCalculator = () => {
               <UpgradeModal 
                 isOpen={showUpgradeModal} 
                 onClose={() => setShowUpgradeModal(false)}
-                // onUpgrade={() => alert("Aqui vamos integrar o Checkout (Stripe/Pix) em breve!")}
+                // Email passado via função interna se necessário, mas para o link simples já funciona
               />
 
               <p className="text-[10px] text-center text-slate-400 px-4">
