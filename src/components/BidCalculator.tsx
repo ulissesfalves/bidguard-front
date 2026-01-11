@@ -30,41 +30,26 @@ export const BidCalculator = () => {
   // ESTADO DO FREEMIUM
   const [isPro, setIsPro] = useState(false);
 
-  // FUNÇÃO DE VERIFICAÇÃO DE STATUS
+// FUNÇÃO DE VERIFICAÇÃO DE STATUS
   const checkUserStatus = async () => {
-      // 1. Busca o usuário atual direto da sessão do Supabase
+      // 1. Busca o usuário atual
       const { data: { user } } = await supabase.auth.getUser();
       
-      if (!user?.email) {
-        console.log("❌ Ninguém logado (ou sem e-mail).");
-        return;
-      }
+      if (!user?.email) return;
 
-      console.log("🕵️ Verificando perfil para:", user.email);
-
-      // 2. Tenta buscar no banco de dados
-      const { data, error } = await supabase
+      // 2. Busca apenas o status PRO no banco
+      const { data } = await supabase
         .from('profiles')
-        .select('*')
+        .select('is_pro')
         .eq('email', user.email)
         .single();
 
-      // 3. Mostra o resultado real no console
-      if (error) {
-        console.error("🔥 Erro ao buscar no Supabase:", error);
-      } else {
-        console.log("✅ Dados recebidos do banco:", data);
-      }
-
-      // 4. Aplica a lógica
-      if (data?.is_pro === true) {
-        console.log("🎉 É PRO! Liberando acesso...");
+      // 3. Atualiza o estado se for PRO
+      if (data?.is_pro) {
         setIsPro(true);
-      } else {
-        console.log("🔒 Não é PRO (ou is_pro é false/null).");
       }
   };
-
+  
   // EFEITO: Roda apenas uma vez quando a tela carrega
   useEffect(() => {
     checkUserStatus();
